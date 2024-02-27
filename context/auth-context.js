@@ -36,9 +36,8 @@ const AuthProvider = ({ children }) => {
       try {
         const token = await AsyncStorage.getItem('token');
         if (token) {
+          // console.log('dispatching ');
           dispatch({ type: 'SET_TOKEN', payload: token });
-          // Fetch user details after setting the token
-          await getUserDetails(token);
         }
       } catch (error) {
         console.error('Error checking token from AsyncStorage:', error);
@@ -54,107 +53,90 @@ const AuthProvider = ({ children }) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
 
-      function getCookie(name) {
-        const value = `; ${document.cookie}`;
-        console.log(value);
-        const parts = value.split(`; ${name}=`);
-        console.log(parts);
-        if (parts.length === 2) {
-            return parts.pop().split(';').shift();
-        }
+    function getCookies(headers)
+    {
+      const setCookies = [];
+    for (const [name, value] of headers) {
+          if (name === "set-cookie") {
+              setCookies.push(value);
+              cookie = JSON.parse(JSON.stringify(value))
+              if(cookie[0].split('=')[0] === "XSRF-TOKEN")
+              {
+                cookie = cookie[0].split('=')[1].split(';')[0]
+              }
+          }
+      }
+      return decodeURIComponent(cookie);
     }
-      console.log(email);
-      console.log(password);
-    //   const csrfResponse = await fetch(`${base_url}/sanctum/csrf-cookie`, {
-    //         headers: {
-    //             'content-type': 'application/json',
-    //             'accept': 'application/json'
-    //         },
-    //         credentials: 'include'
-    //     })
-    //     const csrfToken = getCookie('XSRF-TOKEN');
-    //     console.log('tokrn --- ',csrfToken);
-    //     console.log(csrfResponse);
-    // axios.defaults.headers.common['X-CSRF-TOKEN'] = decodeURIComponent('eyJpdiI6IlFOWkN3WnhCU0p2d29YRXNKZGIxSUE9PSIsInZhbHVlIjoib3g4cWhUTWhrSytyTnZvRWdkWk1SeXFSSVU5TzhIWHVEVWplT2xzQ21jQVhpRzFrSUJRLzdMV3JwaHhMZjhFNjUvTnJEc0NoL1M0bkx4QjdhVFRBNU9yL1c0MzUrSklLTFJQRFNObkVrMlBpYTAyOGwyU2pJeEVnbGxiT0Z5VlAiLCJtYWMiOiI5ZTI1ZDBjZDUxOWU2NjYzNzJjNTk4YjRiZjA1MDliZWFhM2NlOTI0OGU3ZWFhNjhiN2NiODRlOTgzYjJkNzYzIiwidGFnIjoiIn0%3D')
-        const options  = {
-            method:'POST',
-            body: JSON.stringify({email:"todimu@example.net",password:"password"}),
-        }
+      // const csrfResponse = await axios.get(`${base_url}/sanctum/csrf-cookie`, {
+      //       headers: {
+      //           'content-type': 'application/json',
+      //           'accept': 'application/json'
+      //       },
+      //       withCredentials: true,
+      //   })
+        // const csrfToken = getCookies(csrfResponse.headers);        
         
-        // const response  = await fetch(`${base_url}/login`,{
-        //     ...options,
-        //     headers: {
-        //         'content-type': 'application/json',
-        //         'accept': 'application/json',
-        //         'X-XSRF-TOKEN': decodeURIComponent(csrfToken),
-        //     },
-        //     credentials: 'include',
-        // })
+      const response = await axios.post(`${base_url}/api/login`,
+       ({ email, password:"password" }),
+      {
+        headers:{
+          'content-type':'application/json',
+          'accept':'application/json',
+          // 'X-XSRF-TOKEN':csrfToken
+        },
+        withCredentials:true,
+      }
+      );
 
-        const response = await axios.get(`${base_url}/api/user/1`)
+      const token = response.data.data.token
 
-    //    const response =  await fetch(`${base_url}/api/user`, {
-    //         headers: {
-    //             'content-type': 'application/json',
-    //             'accept': 'application/json',
-    //             'X-XSRF-TOKEN': decodeURIComponent(csrfToken),
-    //         },
-    //         credentials: 'include',
-    //         ...options,
-    //     })
-
-
-    //   const response = await axios.post(`http://localhost:8000/login`, JSON.stringify({ email, password }),
-    //   {
-    //     headers:{
-    //         'X-CSRF-TOKEN':decodeURIComponent('eyJpdiI6IlFOWkN3WnhCU0p2d29YRXNKZGIxSUE9PSIsInZhbHVlIjoib3g4cWhUTWhrSytyTnZvRWdkWk1SeXFSSVU5TzhIWHVEVWplT2xzQ21jQVhpRzFrSUJRLzdMV3JwaHhMZjhFNjUvTnJEc0NoL1M0bkx4QjdhVFRBNU9yL1c0MzUrSklLTFJQRFNObkVrMlBpYTAyOGwyU2pJeEVnbGxiT0Z5VlAiLCJtYWMiOiI5ZTI1ZDBjZDUxOWU2NjYzNzJjNTk4YjRiZjA1MDliZWFhM2NlOTI0OGU3ZWFhNjhiN2NiODRlOTgzYjJkNzYzIiwidGFnIjoiIn0%3D')
-    //     }
-    //   }
-    //   );
-    
-      console.log(response.data);
-    //   await AsyncStorage.setItem('token', response.data.token);
+      console.log('TOKENNNN ---> ',token);
+      await AsyncStorage.setItem('token', token);
+      dispatch({ type: 'SET_TOKEN', payload: token });
      
-
-    //   dispatch({ type: 'SET_TOKEN', payload: response.data.token });
-     
-    //   await getUserDetails(response.data.token);
+      await getUserDetails(token);
     } catch (error) {
       console.log('Request Details:', error);
-      dispatch({ type: 'SET_ERROR', payload: 'Login failed' });
+      dispatch({ type: 'SET_ERROR', payload: 'Invalid Credentials' });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
-  const register = () => {
 
-  }
+  const register = async (firstname, lastname, phoneNumber, email, password) => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
 
-//   const register = async (firstname, lastname, phoneNumber, email, password) => {
-//     try {
-//       dispatch({ type: 'SET_LOADING', payload: true });
-
-//       const response = await axios.post(`${base_url}/register`, { name, email, password,password_confirmation });
+      const response = await axios.post(`${base_url}/register`, { name, email, password,password_confirmation });
 
 
-//       dispatch({ type: 'SET_TOKEN', payload: response.data.token });
-//       await AsyncStorage.setItem('token', response.data.token);
+      dispatch({ type: 'SET_TOKEN', payload: response.data.token });
+      await AsyncStorage.setItem('token', response.data.token);
 
      
-//       console.log("register success")
-//     } catch (error) {
-//       console.error('Registration failed:', error);
-//       dispatch({ type: 'SET_ERROR', payload: 'Registration failed' });
-//     } finally {
-//       dispatch({ type: 'SET_LOADING', payload: false });
-//     }
-//   };
+      console.log("register success")
+    } catch (error) {
+      console.error('Registration failed:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Registration failed' });
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
 
   const getUserDetails = async (token) => {
     try {
-      const response = await axios.get(`${base_url}/api/user/g`);
-
+      const response = await axios.get(`${base_url}/api/getStatus`,{
+        headers:{
+          'content-type':'application/json',
+          'accept':'application/json',
+          'authorization': `Bearer ${token}`
+        },
+        withCredentials:true,
+        // withXSRFToken:true
+      });
+      console.log(response.data);
       dispatch({ type: 'SET_USER', payload: response.data });
     } catch (error) {
       console.error('Error fetching user details:', error);
@@ -163,8 +145,21 @@ const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
+      const token = await AsyncStorage.getItem('token');
+      const response = await axios.post(`${base_url}/api/logout`,{},{
+        headers:{
+          'content-type':'application/json',
+          'accept':'application/json',
+          'authorization':`Bearer ${token}`
+        },
+        withCredentials:true,
+        // withXSRFToken:true
+      })
       await AsyncStorage.removeItem('token');
+
       dispatch({ type: 'SET_TOKEN', payload: null });
+      dispatch({ type: 'SET_USER', payload: null });
+      dispatch({ type: 'SET_ERROR', payload: null });
     } catch (error) {
       console.error('Logout failed:', error);
     }

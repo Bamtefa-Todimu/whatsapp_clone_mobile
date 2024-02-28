@@ -2,7 +2,7 @@ import { Button, FlatList, Image, ScrollView, StyleSheet, TextInput, TouchableOp
 
 import EditScreenInfo from '@/components/EditScreenInfo';
 import { Text, View } from '@/components/Themed';
-
+import { useIsFocused } from '@react-navigation/native';
 import Echo from 'laravel-echo';
 import socketio from 'socket.io-client';
 import Pusher from 'pusher-js/react-native'
@@ -15,6 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EvilIcons, Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
 import {echo} from '../../echo'
+import moment from 'moment';
 
 
 // const echo = new Echo({
@@ -35,12 +36,12 @@ import {echo} from '../../echo'
 
 export default function TabOneScreen() {
 const theme = useColorScheme() ?? "light"
-
+  const isFocused=useIsFocused();
   const router = useRouter()
   const [chats,setChats] = useState<Array<any>>([])
   const [userToken,setUserToken] = useState<string>("")
   const {user,logout,token} = useAuth()
-  const [messageList,setMessageList] = useState<Array<String>>(['message1','message2'])
+  const [messageList,setMessageList] = useState<Array<String>>([])
   const [latestMessages,setLatestMessages] = useState<Array<Object>>([])
 
   const [text,setText] = useState<string>("")
@@ -49,10 +50,11 @@ const theme = useColorScheme() ?? "light"
   useEffect(()=>{
     
     const getToken = async() => {
+
       const authtoken =await AsyncStorage.getItem('token')
       
       const userId =await AsyncStorage.getItem('user_id')
-      // console.log('FROM LOCAL STORAGE .......................',authtoken);
+      console.log('FROM LOCAL STORAGE .......................',userId);
       
       if(!authtoken)
     {
@@ -64,36 +66,39 @@ const theme = useColorScheme() ?? "light"
 
       try
       {
-        console.log("userIDDDDDDDDDDDDDD . .. . . . ",userId);
+
+        // console.log("userIDDDDDDDDDDDDDD . .. . . . ",userId);
         
           echo
         .channel(`testing.${userId?.toString()}`)
         .listen('SendChatMessage', 
           (e:any) => {
-            // console.log('chats ======================>',chats);
+            // console.log('chats ======================>',e.chat.user.id);
+            // console.log(chats);
             
             // console.log("New message received", e);
             // chats.forEach((ch) => console.log("valuasdfasdfasdfasdfa  == = = ",ch)
             //  )
-            // const chatt = chats.filter((ch) => ch.id !== e.chat.id ).concat(e.chat).reverse()
+            // const chatt = chats.filter((ch) => ch.user?.id !== e.chat.user.id ).concat(e.chat).reverse()
             // console.log(chatt);
             
+            setChats((state) => state.filter((ch) => ch.user?.id !== e.chat.user.id ).concat({...e.chat,isNew:true}).reverse())
             // setChats(chatt)
-            // setMessageList((state) => state.concat(e.message))
           }
         );
 
-        const response  = await axios.get(`${base_url}/api/chats`,{
+        const response  = await axios.get(`${base_url}/api/users/messages`,{
           headers:{
             "content-type":"application/json",
             "accept":"application/json",
             "authorization":`Bearer ${token}`
           }
         })
-        setChats(response.data.active_chats)
-            console.log('chats ======================>',response.data.active_chats);
-
-        setLatestMessages(response.data.latestMessages)
+        console.log("we focused");
+        setChats(response.data.data)
+            // console.log('chats ======================>',response.data.data);
+        
+        // setLatestMessages(response.data.latestMessages)
 
         // console.log(response.data.active_chats[0])
         
@@ -107,8 +112,13 @@ const theme = useColorScheme() ?? "light"
     }
     }
 
-    getToken()
-  },[token])
+    if(isFocused)
+    {
+      getToken()
+      console.log("JUST FOCUSING HERE");
+      
+    }
+  },[token,isFocused])
 
   const handleLogout = async () =>{
     await logout()
@@ -158,21 +168,25 @@ const theme = useColorScheme() ?? "light"
           {
             chats? 
 
-            formatChatArray(chats).map((chat:any,index:number) => {
+            chats.map((chat:any,index:number) => {
               return (
 
-                <TouchableOpacity key={index} style={styles.chatContainer} onPress={() => router.push({pathname:`/room/${chat.pivot.chat_id}`,params:{recipientId:chat?.id}})}>
+                <TouchableOpacity key={index} style={styles.chatContainer} onPress={() => router.push({pathname:`/room/${chat.chat_id}`,params:{recipientId:chat?.user.id}})}>
                   <View style={styles.chatInfoContainer}>
                   <Image resizeMode='cover' style={styles.chatImage}  source={{uri:chat?.avatar || "https://th.bing.com/th/id/OIP.VORoQXOzfnrc1yOV4anzxQHaHa?rs=1&pid=ImgDetMain"}} />
-                    <View style={{gap:3}}>
-                      <Text style={styles.chatName}>{chat?.name}</Text>
+                    <View style={{gap:3,flexShrink:1,flexGrow:0}}>
+                      <Text style={styles.chatName}>{chat?.user?.name}</Text>
                       <Text numberOfLines={2} style={styles.chatMessage}>{chat.message}</Text>
                     </View>
                   </View>
-                  <View>
-                    <Text key={index}>{getDate(chat?.updated_at)}</Text>
+                  <View style={{flexShrink:0}}>
+                    <Text key={index} style={{color:chat?.isNew?Colors.primartBlue:'gray'}}>{moment(chat?.created_at).fromNow()}</Text>
 
                   </View>
+                    {
+                      chat && chat?.isNew && 
+                  <View style={{position:'absolute',right:20,bottom:20,width:10,height:10,borderRadius:10,backgroundColor:Colors.primartBlue}}></View>
+                    }
                   </TouchableOpacity>
 
 
@@ -247,7 +261,8 @@ const styles = StyleSheet.create({
     },
     chatInfoContainer:{
       flexDirection:'row',
-      gap:15
+      gap:15,
+      flexShrink:1
 
     },
     chatImage:{
@@ -262,6 +277,8 @@ const styles = StyleSheet.create({
       textTransform:'capitalize'
     },
     chatMessage:{
-      opacity:0.7
+      opacity:0.7,
+      flexShrink:1,
+      flexGrow:0
     },
 });

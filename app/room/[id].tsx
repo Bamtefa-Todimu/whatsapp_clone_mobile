@@ -10,7 +10,7 @@ import axios from 'axios'
 import Colors from '@/constants/Colors'
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons'
 import { useNavigationBuilder } from '@react-navigation/native'
-
+import moment from 'moment'
 
 const room = () => {
 
@@ -46,7 +46,7 @@ const room = () => {
           .channel(`testing.${user?.toString()}`)
           .listen('SendChatMessage', 
             (e:any) => {
-              console.log(e);
+              // console.log(e);
               setMessages((state) => state.concat(e.chat))
               scrollRef.current?.scrollToEnd()
             }
@@ -96,6 +96,8 @@ const room = () => {
 
 
   const handleSendMessage = async() => {
+        setText("")
+
           const token = await AsyncStorage.getItem('token');
     setMessages((state) => state.concat({message:text,user_id:userId}) )
     const response  = await axios.post(`${base_url}/api/chat/${recipientId}`,{message:text},{
@@ -124,11 +126,14 @@ const room = () => {
                 
                   <View key={index} style={[styles.messageBubble]}>
                     <Text style={styles.msgText} >{msg.message}</Text>
+                    <Text style={styles.date} >{moment(msg.created_at).fromNow()}</Text>
+
                   </View>
                 
                 :
                 <View key={index} style={[styles.messageBubbleUser]}>
                     <Text style={styles.msgText} >{msg.message}</Text>
+                    <Text style={styles.date} >{moment(msg.created_at).fromNow()}</Text>
                   </View>
                 
 
@@ -146,7 +151,7 @@ const room = () => {
       >
 
       <View style={[styles.messageInputBox]}>
-        <TextInput placeholder='' style={styles.messageInput} onChangeText={(text) => setText(text) }/>
+        <TextInput placeholder='' style={styles.messageInput} onChangeText={(text) => setText(text) } value={text}/>
         <TouchableOpacity onPress={() => handleSendMessage()}>
           <MaterialCommunityIcons name='send-circle' size={40} color={Colors.primartBlue} />
         </TouchableOpacity>
@@ -172,33 +177,34 @@ const styles = StyleSheet.create({
     paddingBottom:20
   },
   messageBubble:{
-    borderRadius:14,
-    // maxWidth:"70%",
+    borderRadius:10,
+    maxWidth:"70%",
     marginVertical:5,
     padding:5,
-    paddingHorizontal:20,
+    paddingHorizontal:10,
     paddingVertical:10,
     alignSelf:'flex-start'
   },
   messageBubbleUser:{
-    borderRadius:14,
+    borderRadius:10,
     maxWidth:"70%",
     marginVertical:5,
     padding:5,
-    paddingHorizontal:20,
+    paddingHorizontal:10,
     paddingVertical:10,
     backgroundColor:'#dcf7c5',
     alignSelf:'flex-end'
   },
   msgText:{
     fontSize:17,
-    fontWeight:'500'
+    fontWeight:'500',
+    marginRight:55
   },
   messageInputBox:{
     flexDirection:'row',
     justifyContent:'space-between',
     alignItems:'center',
-    paddingHorizontal:20,
+    paddingHorizontal:50,
     paddingVertical:30,
     paddingTop:10,
     backgroundColor:'#ececec'
@@ -208,8 +214,17 @@ const styles = StyleSheet.create({
     borderColor:'#000',
     borderWidth:StyleSheet.hairlineWidth,
     width:'80%',
-    borderRadius:10,
+    borderRadius:15,
     fontSize:16,
-    padding:8
+    padding:8,
+    paddingVertical:5
+  },
+  date:{
+    fontSize:8,
+    alignSelf:'flex-end',
+    color:'gray',
+    position:'absolute',
+    right:6,
+    bottom:4
   },
 })

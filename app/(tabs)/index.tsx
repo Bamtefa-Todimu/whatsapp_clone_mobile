@@ -48,10 +48,11 @@ const theme = useColorScheme() ?? "light"
   const [message,setMessage] = useState<string>()
 
   useEffect(()=>{
-    
     const getToken = async() => {
+    // router.push('/(modals)/addUser')
 
       const authtoken =await AsyncStorage.getItem('token')
+
       
       const userId =await AsyncStorage.getItem('user_id')
       console.log('FROM LOCAL STORAGE .......................',userId);
@@ -173,7 +174,7 @@ const theme = useColorScheme() ?? "light"
 
                 <TouchableOpacity key={index} style={styles.chatContainer} onPress={() => router.push({pathname:`/room/${chat.chat_id}`,params:{recipientId:chat?.user.id}})}>
                   <View style={styles.chatInfoContainer}>
-                  <Image resizeMode='cover' style={styles.chatImage}  source={{uri:chat?.avatar || "https://th.bing.com/th/id/OIP.VORoQXOzfnrc1yOV4anzxQHaHa?rs=1&pid=ImgDetMain"}} />
+                  <Image resizeMode='cover' style={styles.chatImage}  source={{uri:chat?.user.image}} />
                     <View style={{gap:3,flexShrink:1,flexGrow:0}}>
                       <Text style={styles.chatName}>{chat?.user?.name}</Text>
                       <Text numberOfLines={2} style={styles.chatMessage}>{chat.message}</Text>
@@ -198,7 +199,6 @@ const theme = useColorScheme() ?? "light"
           }
         </View>
       </ScrollView>
-      <Button title='Logout' onPress={async () => handleLogout()} />
     </View>
     
 

@@ -51,15 +51,18 @@ const room = () => {
               scrollRef.current?.scrollToEnd()
             }
           );
-
-          const response  = await axios.get(`${base_url}/api/chat/${id}/message`,{
-          headers:{
-            "content-type":"application/json",
-            "accept":"application/json",
-            "authorization":`Bearer ${token}`
+          if(id !== "0")
+          {
+                const response  = await axios.get(`${base_url}/api/chat/${id}/message`,{
+              headers:{
+                "content-type":"application/json",
+                "accept":"application/json",
+                "authorization":`Bearer ${token}`
+              }
+            })
+            setMessages(response.data.data)
           }
-        })
-        setMessages(response.data.data)
+          
               scrollRef.current?.scrollToEnd()
 
               const recipientResponse  = await axios.get(`${base_url}/api/user/${recipientId}`,{

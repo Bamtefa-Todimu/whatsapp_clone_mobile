@@ -86,11 +86,13 @@ const AuthProvider = ({ children }) => {
         withCredentials:true,
       }
       );
-
+      console.log(response.data);
       const token = response.data.data.token
 
       console.log('TOKENNNN ---> ',token);
       await AsyncStorage.setItem('user_id', response.data.data.user_id.toString());
+      await AsyncStorage.setItem('user', JSON.stringify(response.data.data));
+
 
       await AsyncStorage.setItem('token', token);
       dispatch({ type: 'SET_TOKEN', payload: token });
@@ -121,7 +123,8 @@ const AuthProvider = ({ children }) => {
       );
 
       const token = response.data.data.token
-      await AsyncStorage.setItem('user_id', response.data.data.user_id);
+      await AsyncStorage.setItem('user_id', JSON.stringify(response.data.data.user_id));
+      await AsyncStorage.setItem('user', JSON.stringify(response.data.data));
 
       // dispatch({ type: 'SET_TOKEN', token });
       await AsyncStorage.setItem('token', token);
@@ -150,7 +153,7 @@ const AuthProvider = ({ children }) => {
       });
       console.log(response.data);
       
-      dispatch({ type: 'SET_USER', payload: response.data.id });
+      dispatch({ type: 'SET_USER', payload: response.data });
       dispatch({ type: 'SET_TOKEN', token });
 
     } catch (error) {

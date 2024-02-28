@@ -1,7 +1,7 @@
 import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Link, Tabs } from 'expo-router';
-import { Pressable, View } from 'react-native';
+import { Link, Tabs, router } from 'expo-router';
+import { Pressable, TouchableOpacity, View } from 'react-native';
 
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -49,17 +49,9 @@ export default function TabLayout() {
           headerRight: () => (
             <View style={{flexDirection:'row',alignItems:'center',gap:32,marginRight:20}}>
               <SimpleLineIcons name="camera" size={25} color={Colors.primartBlue}/>
-              <Ionicons name="add-circle" size={35} color={Colors.primartBlue}/>
-              {/* <Pressable>
-                {({ pressed }) => (
-                  <Feather
-                    name="more-horizontal"
-                    size={25}
-                    color={Colors[colorScheme ?? 'light'].text}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable> */}
+              <TouchableOpacity onPress={() => router.push('/(modals)/addUser')}>
+                <Ionicons name="add-circle" size={35} color={Colors.primartBlue}/>
+              </TouchableOpacity>
             </View>
 
           ),
@@ -69,6 +61,9 @@ export default function TabLayout() {
         name="two"
         options={{
           title: 'Settings',
+          headerStyle:{
+            backgroundColor:'rgba(0,0,0,0.001)'
+          },
           tabBarIcon: ({ color }) => <AntDesign name="setting" color={color} size={25} />,
         }}
       />

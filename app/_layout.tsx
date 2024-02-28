@@ -9,6 +9,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { TouchableOpacity } from 'react-native';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
+import Permissions, { PERMISSIONS } from 'react-native-permissions';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -83,6 +84,19 @@ function RootLayoutNav() {
           headerTitle:'',
           headerTintColor:'',
           headerShadowVisible:false,
+          
+      }} />
+        <Stack.Screen name="(modals)/addUser" options={{ presentation: 'modal',
+        animation:'slide_from_bottom',
+        
+          headerTitle:'New Chat',
+          headerTintColor:'',
+          headerShadowVisible:false,
+          headerRight:() => (
+            <TouchableOpacity>
+              <AntDesign name='closecircle' size={25} color={'gray'} />
+            </TouchableOpacity>
+          )
           
       }} />
       </Stack>

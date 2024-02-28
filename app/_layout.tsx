@@ -1,11 +1,14 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import {AuthProvider} from '../context/auth-context';
 import { useColorScheme } from '@/components/useColorScheme';
+import { TouchableOpacity } from 'react-native';
+import { AntDesign, Ionicons } from '@expo/vector-icons';
+import Colors from '@/constants/Colors';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -54,13 +57,34 @@ function RootLayoutNav() {
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="room/[id]" options={{
+           headerTitle:'',
+           title:"",
+           headerShadowVisible:false,
+           headerLeft:() => (
+               <TouchableOpacity style={{paddingRight:20}} onPress={() => router.back()} >
+                <AntDesign name='arrowleft' size={25} color={Colors.primartBlue} />
+               </TouchableOpacity>
+           )
+           }} />
+
+
         <Stack.Screen name="(modals)/login" options={{ presentation: 'modal',
+        animation:'fade',
+          headerTitle:'',
+          headerTintColor:'',
+          headerShadowVisible:false,
+          headerBackVisible:false
+          
+      }} />
+        <Stack.Screen name="(modals)/register" options={{ presentation: 'modal',
+        animation:'slide_from_bottom',
+        
           headerTitle:'',
           headerTintColor:'',
           headerShadowVisible:false,
           
       }} />
-        <Stack.Screen name="(modals)/register" options={{ presentation: 'modal' }} />
       </Stack>
     </ThemeProvider>
     </AuthProvider>

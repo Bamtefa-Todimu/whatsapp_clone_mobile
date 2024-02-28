@@ -36,7 +36,6 @@ const AuthProvider = ({ children }) => {
       try {
         const token = await AsyncStorage.getItem('token');
         if (token) {
-          // console.log('dispatching ');
           dispatch({ type: 'SET_TOKEN', payload: token });
         }
       } catch (error) {
@@ -83,7 +82,6 @@ const AuthProvider = ({ children }) => {
         headers:{
           'content-type':'application/json',
           'accept':'application/json',
-          // 'X-XSRF-TOKEN':csrfToken
         },
         withCredentials:true,
       }
@@ -92,6 +90,8 @@ const AuthProvider = ({ children }) => {
       const token = response.data.data.token
 
       console.log('TOKENNNN ---> ',token);
+      await AsyncStorage.setItem('user_id', response.data.data.user_id.toString());
+
       await AsyncStorage.setItem('token', token);
       dispatch({ type: 'SET_TOKEN', payload: token });
      
@@ -105,18 +105,31 @@ const AuthProvider = ({ children }) => {
   };
 
 
-  const register = async (firstname, lastname, phoneNumber, email, password) => {
+  const register = async (name, email, password, password_confirmation) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
 
-      const response = await axios.post(`${base_url}/register`, { name, email, password,password_confirmation });
+      const response = await axios.post(`${base_url}/api/register`,
+       { name, email, password,password_confirmation },
+       {
+        headers:{
+          'content-type':'application/json',
+          'accept':'application/json',
+        },
+        withCredentials:true,
+      }
+      );
 
+      const token = response.data.data.token
+      await AsyncStorage.setItem('user_id', response.data.data.user_id);
 
-      dispatch({ type: 'SET_TOKEN', payload: response.data.token });
-      await AsyncStorage.setItem('token', response.data.token);
+      // dispatch({ type: 'SET_TOKEN', token });
+      await AsyncStorage.setItem('token', token);
 
      
       console.log("register success")
+      await getUserDetails(token);
+
     } catch (error) {
       console.error('Registration failed:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Registration failed' });
@@ -127,17 +140,19 @@ const AuthProvider = ({ children }) => {
 
   const getUserDetails = async (token) => {
     try {
-      const response = await axios.get(`${base_url}/api/getStatus`,{
+      const response = await axios.get(`${base_url}/api/user`,{
         headers:{
           'content-type':'application/json',
           'accept':'application/json',
           'authorization': `Bearer ${token}`
         },
         withCredentials:true,
-        // withXSRFToken:true
       });
       console.log(response.data);
-      dispatch({ type: 'SET_USER', payload: response.data });
+      
+      dispatch({ type: 'SET_USER', payload: response.data.id });
+      dispatch({ type: 'SET_TOKEN', token });
+
     } catch (error) {
       console.error('Error fetching user details:', error);
     }
